@@ -3,17 +3,18 @@ import jwt
 from datetime import datetime, timedelta
 from functools import wraps
 import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
-
-print(os.environ.get('SECRET_KEY'))
+secret = os.environ.get('SECRET_KEY')
+print(secret)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         # Se obtiene el token de la cabecera
-        token = request.headers.get('token')
+        token = request.headers.get('Authorization')
         # Si no se envía el token
         if not token:
             return jsonify({'message': 'Token is missing'}), 403
@@ -46,6 +47,19 @@ def protected():
 def unprotected():
     return jsonify({'message': 'This is available for everyone.'})
 
+# @app.route('/login', methods=['POST'])
+# def login():
+#     # Se obtienen las credenciales
+#     auth = request.form
+#     # Si las credenciales son correctas
+#     if auth['username'] == 'admin' and auth['password'] == '123':
+#         # Se genera el token
+#         token = jwt.encode({'user': auth['username'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
+#         # Se devuelve el token
+#         return jsonify({'token': token.decode('UTF-8')})
+#     # Si las credenciales son incorrectas
+#     return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
 @app.route('/login', methods=['POST'])
 def login():
     # Si coincide el usuario y la contraseña
@@ -54,11 +68,10 @@ def login():
         # Se genera el token con el usuario y la fecha de expiración
         token = jwt.encode({
             'user': request.form['username'],
-            'expiration': datetime.utcnow() + timedelta(minutes=30)
-        }, 
-        app.config['SECRET_KEY']) # Se usa la clave secreta
+            'exp': datetime.utcnow() + timedelta(minutes=30)}, 
+            app.config['SECRET_KEY']) # Se usa la clave secreta
         # Se devuelve el token
-        return jsonify({'token': token.decode('UTF-8')})
+        return jsonify({'token': token})
     else:
         # Si no coincide, se devuelve un error 403
         return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm="Login Required"'})
