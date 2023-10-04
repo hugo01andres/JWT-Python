@@ -47,19 +47,6 @@ def protected():
 def unprotected():
     return jsonify({'message': 'This is available for everyone.'})
 
-# @app.route('/login', methods=['POST'])
-# def login():
-#     # Se obtienen las credenciales
-#     auth = request.form
-#     # Si las credenciales son correctas
-#     if auth['username'] == 'admin' and auth['password'] == '123':
-#         # Se genera el token
-#         token = jwt.encode({'user': auth['username'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
-#         # Se devuelve el token
-#         return jsonify({'token': token.decode('UTF-8')})
-#     # Si las credenciales son incorrectas
-#     return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
-
 @app.route('/login', methods=['POST'])
 def login():
     # Si coincide el usuario y la contraseña
@@ -75,6 +62,43 @@ def login():
     else:
         # Si no coincide, se devuelve un error 403
         return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+    
+
+# para api login
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    # Si coincide el usuario y la contraseña
+    if request.json['username'] and request.json['password'] == '123':
+        session['logged_in'] = True
+        # genera el token con el usuario y exp
+        token = jwt.encode({
+            'user': request.json['username'],
+            'exp': datetime.utcnow() + timedelta(minutes=30)}, 
+            app.config['SECRET_KEY']) # Se usa la clave secreta
+        # Se devuelve el token
+        return jsonify({'token': token})
+    else:
+        # Si no coincide, se devuelve un error 403
+        return make_response('Unable to verify', 403, {'WWW-Authenticate': 'Basic realm="Login Required"'})
+    
+def verificar_token(token):
+    try:
+        return jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])['username']
+    except:
+        return None
+    
+
+def requerir_token(f):
+    def wrapper(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if token:
+            token = token.split('Bearer ')[1]
+            usuario = verificar_token(token)
+            if usuario:
+                return f(usuario, *args, **kwargs)
+        return jsonify({"mensaje": "Token inválido"}), 401
+    return wrapper
+
 
 @app.route('/logout')
 def logout():
