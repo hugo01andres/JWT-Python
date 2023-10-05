@@ -14,13 +14,13 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         # Se obtiene el token de la cabecera
-        token = request.headers.get('token')
+        token = request.headers.get('Authorization')
         # Si no se envía el token
         if not token:
             return jsonify({'message': 'Token is missing'}), 403
         try:
             # Se decodifica el token
-            data = jwt.decode(token, app.config['SECRET_KEY'])
+            data = jwt.decode(token, secret)
         except:
             return jsonify({'message': 'Token is invalid'}), 403
         # Si el token es válido, se devuelve la función
@@ -46,19 +46,6 @@ def protected():
 @app.route('/public')
 def unprotected():
     return jsonify({'message': 'This is available for everyone.'})
-
-# @app.route('/login', methods=['POST'])
-# def login():
-#     # Se obtienen las credenciales
-#     auth = request.form
-#     # Si las credenciales son correctas
-#     if auth['username'] == 'admin' and auth['password'] == '123':
-#         # Se genera el token
-#         token = jwt.encode({'user': auth['username'], 'exp': datetime.utcnow() + timedelta(minutes=30)}, app.config['SECRET_KEY'])
-#         # Se devuelve el token
-#         return jsonify({'token': token.decode('UTF-8')})
-#     # Si las credenciales son incorrectas
-#     return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
 @app.route('/login', methods=['POST'])
 def login():
