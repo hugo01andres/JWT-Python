@@ -5,6 +5,9 @@ from functools import wraps
 import os
 from dotenv import load_dotenv
 
+
+# NOTE: Is not working because in JINJA you can not use token, token y for API ONLY
+
 app = Flask(__name__)
 secret = os.environ.get('SECRET_KEY')
 print(secret)
