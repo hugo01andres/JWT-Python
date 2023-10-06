@@ -2,6 +2,9 @@
 
 This Python script demonstrates how to implement token-based authentication to secure access to your application or API. By requiring a valid token, you can control who can access your resources.
 
+Main is not working fine, I though it could work in Jinja but is a different authentication. 
+Token only works for API
+
 \#\# Getting Started
 
 \#\#\# Prerequisites
